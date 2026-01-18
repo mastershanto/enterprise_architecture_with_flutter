@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/todo_state.dart';
 import '../widgets/todo_item.dart';
 
@@ -17,6 +18,14 @@ class _TodoPageState extends State<TodoPage> {
     super.initState();
     // Load todos when page initializes
     Future.microtask(() => context.read<TodoProvider>().getTodos());
+  }
+
+  void _logout() async {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
   }
 
   @override
@@ -36,6 +45,11 @@ class _TodoPageState extends State<TodoPage> {
                 label: const Text('Addresses'),
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: _logout,
           ),
         ],
       ),

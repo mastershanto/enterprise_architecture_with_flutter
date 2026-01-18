@@ -9,6 +9,14 @@ import '../../features/address/domain/usecases/delete_address_uc.dart';
 import '../../features/address/domain/usecases/get_addresses_uc.dart';
 import '../../features/address/domain/usecases/save_address_uc.dart';
 import '../../features/address/presentation/bloc/address_state.dart';
+import '../../features/auth/data/datasources/auth_local_datasource.dart';
+import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/get_cached_user_uc.dart';
+import '../../features/auth/domain/usecases/login_uc.dart';
+import '../../features/auth/domain/usecases/logout_uc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/todo/data/datasources/todo_local_datasource.dart';
 import '../../features/todo/data/datasources/todo_remote_datasource.dart';
 import '../../features/todo/data/repositories/todo_repository_impl.dart';
@@ -23,6 +31,44 @@ final getIt = GetIt.instance;
 Future<void> setupServiceLocator() async {
   // HTTP Clients
   getIt.registerSingleton<Dio>(Dio());
+
+  // ============ AUTH FEATURE ============
+  // Data Sources
+  getIt.registerSingleton<AuthLocalDataSource>(AuthLocalDataSourceInMemory());
+
+  getIt.registerSingleton<AuthRemoteDataSource>(
+    AuthRemoteDataSourceImpl(dioClient: getIt<Dio>()),
+  );
+
+  // Repository
+  getIt.registerSingleton<AuthRepository>(
+    AuthRepositoryImpl(
+      remoteDataSource: getIt<AuthRemoteDataSource>(),
+      localDataSource: getIt<AuthLocalDataSource>(),
+    ),
+  );
+
+  // Use Cases
+  getIt.registerSingleton<LoginUseCase>(
+    LoginUseCase(repository: getIt<AuthRepository>()),
+  );
+
+  getIt.registerSingleton<LogoutUseCase>(
+    LogoutUseCase(repository: getIt<AuthRepository>()),
+  );
+
+  getIt.registerSingleton<GetCachedUserUseCase>(
+    GetCachedUserUseCase(repository: getIt<AuthRepository>()),
+  );
+
+  // Provider
+  getIt.registerSingleton<AuthProvider>(
+    AuthProvider(
+      loginUsecase: getIt<LoginUseCase>(),
+      logoutUsecase: getIt<LogoutUseCase>(),
+      getCachedUserUsecase: getIt<GetCachedUserUseCase>(),
+    ),
+  );
 
   // ============ TODO FEATURE ============
   // Data Sources

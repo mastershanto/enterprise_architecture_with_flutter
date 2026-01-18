@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'core/di/injection_container.dart';
 import 'features/address/presentation/bloc/address_state.dart';
 import 'features/address/presentation/pages/address_page.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 import 'features/todo/presentation/bloc/todo_state.dart';
 import 'features/todo/presentation/pages/todo_page.dart';
 
@@ -20,6 +22,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => getIt<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => getIt<TodoProvider>()),
         ChangeNotifierProvider(create: (_) => getIt<AddressProvider>()),
       ],
@@ -29,8 +32,23 @@ class App extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const TodoPage(),
-        routes: {'/address': (context) => const AddressPage()},
+        home: Consumer<AuthProvider>(
+          builder: (context, authProvider, child) {
+            if (authProvider.isLoading) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return authProvider.isAuthenticated
+                ? const TodoPage()
+                : const LoginPage();
+          },
+        ),
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/todo': (context) => const TodoPage(),
+          '/address': (context) => const AddressPage(),
+        },
       ),
     );
   }
