@@ -1,11 +1,12 @@
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
 import '../../features/address/data/datasources/address_local_datasource.dart';
 import '../../features/address/data/datasources/address_remote_datasource.dart';
 import '../../features/address/data/repositories/address_repository_impl.dart';
 import '../../features/address/domain/repositories/address_repository.dart';
 import '../../features/address/domain/usecases/delete_address_uc.dart';
+import '../../features/address/domain/usecases/get_addresses_uc.dart';
 import '../../features/address/domain/usecases/save_address_uc.dart';
 import '../../features/address/presentation/bloc/address_state.dart';
 import '../../features/todo/data/datasources/todo_local_datasource.dart';
@@ -20,8 +21,8 @@ import '../../features/todo/presentation/bloc/todo_state.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
-  // HTTP Client
-  getIt.registerSingleton<http.Client>(http.Client());
+  // HTTP Clients
+  getIt.registerSingleton<Dio>(Dio());
 
   // ============ TODO FEATURE ============
   // Data Sources
@@ -68,7 +69,7 @@ Future<void> setupServiceLocator() async {
   );
 
   getIt.registerSingleton<AddressRemoteDataSource>(
-    AddressRemoteDataSourceImpl(httpClient: getIt<http.Client>()),
+    AddressRemoteDataSourceImpl(dioClient: getIt<Dio>()),
   );
 
   // Repository
@@ -80,6 +81,10 @@ Future<void> setupServiceLocator() async {
   );
 
   // Use Cases
+  getIt.registerSingleton<GetAddressesUseCase>(
+    GetAddressesUseCase(repository: getIt<AddressRepository>()),
+  );
+
   getIt.registerSingleton<SaveAddressUseCase>(
     SaveAddressUseCase(repository: getIt<AddressRepository>()),
   );
@@ -91,6 +96,7 @@ Future<void> setupServiceLocator() async {
   // Provider
   getIt.registerSingleton<AddressProvider>(
     AddressProvider(
+      getAddressesUsecase: getIt<GetAddressesUseCase>(),
       saveAddressUsecase: getIt<SaveAddressUseCase>(),
       deleteAddressUsecase: getIt<DeleteAddressUseCase>(),
     ),

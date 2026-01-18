@@ -1,11 +1,11 @@
 // Example: How to Use Address Feature in Your App
 
+import 'package:enterprise_architecture_with_flutter/features/address/presentation/bloc/address_state.dart';
+import 'package:enterprise_architecture_with_flutter/features/address/presentation/pages/address_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Import the provider and page
-import 'features/address/presentation/bloc/address_state.dart';
-import 'features/address/presentation/pages/address_page.dart';
 
 /// Example 1: Basic button to navigate to Address Page
 class NavigateToAddressPageExample extends StatelessWidget {
@@ -84,12 +84,8 @@ class _SaveAddressFormExampleState extends State<SaveAddressFormExample> {
                         'Address saved successfully!',
                         style: TextStyle(color: Colors.green),
                       ),
-                      Text(
-                        'ID: ${addressProvider.state.savedAddress!.id}',
-                      ),
-                      Text(
-                        addressProvider.state.savedAddress!.addressLine1,
-                      ),
+                      Text('ID: ${addressProvider.state.savedAddress!.id}'),
+                      Text(addressProvider.state.savedAddress!.addressLine1),
                     ],
                   ),
                 ),
@@ -157,9 +153,7 @@ class _SaveAddressFormExampleState extends State<SaveAddressFormExample> {
                         },
                   icon: const Icon(Icons.delete),
                   label: const Text('Delete'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 ),
             ],
           ),
@@ -177,13 +171,13 @@ class SaveAddressButtonExample extends StatelessWidget {
       onPressed: () {
         // Save address without rebuilding the entire widget
         context.read<AddressProvider>().saveAddress(
-              addressLine1: 'Dhaka',
-              city: 'Dhaka',
-              state: 'Dhaka',
-              postalCode: '12345',
-              country: 'Bangladesh',
-              label: 'home',
-            );
+          addressLine1: 'Dhaka',
+          city: 'Dhaka',
+          state: 'Dhaka',
+          postalCode: '12345',
+          country: 'Bangladesh',
+          label: 'home',
+        );
       },
       child: const Text('Save My Address'),
     );
@@ -217,9 +211,7 @@ class AddressDisplayExample extends StatelessWidget {
                 if (savedAddress.addressLine2 != null)
                   Text(savedAddress.addressLine2!),
                 Text('${savedAddress.city}, ${savedAddress.state}'),
-                Text(
-                  '${savedAddress.postalCode}, ${savedAddress.country}',
-                ),
+                Text('${savedAddress.postalCode}, ${savedAddress.country}'),
                 const SizedBox(height: 8),
                 Text(
                   'Label: ${savedAddress.label}',
@@ -286,9 +278,7 @@ class _AddressFormWithErrorHandlingState
               // Form fields
               TextField(
                 controller: _addressLine1Controller,
-                decoration: const InputDecoration(
-                  labelText: 'Address Line 1',
-                ),
+                decoration: const InputDecoration(labelText: 'Address Line 1'),
               ),
               TextField(
                 controller: _cityController,
@@ -375,9 +365,7 @@ class ExamplesApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: ExamplesHomePage(),
-    );
+    return const MaterialApp(home: ExamplesHomePage());
   }
 }
 
@@ -387,9 +375,7 @@ class ExamplesHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Address Feature Examples'),
-      ),
+      appBar: AppBar(title: const Text('Address Feature Examples')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

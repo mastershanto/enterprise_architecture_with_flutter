@@ -4,6 +4,8 @@ import '../../../../core/errors/failures.dart';
 import '../entities/address.dart';
 
 abstract class AddressRepository {
+  Future<Either<Failure, List<AddressEntity>>> getAddresses();
+
   Future<Either<Failure, AddressEntity>> saveAddress({
     required String addressLine1,
     String? addressLine2,

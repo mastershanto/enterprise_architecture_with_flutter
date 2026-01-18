@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/di/injection_container.dart';
 import 'features/address/presentation/bloc/address_state.dart';
+import 'features/address/presentation/pages/address_page.dart';
 import 'features/todo/presentation/bloc/todo_state.dart';
 import 'features/todo/presentation/pages/todo_page.dart';
 
@@ -29,6 +30,7 @@ class App extends StatelessWidget {
           useMaterial3: true,
         ),
         home: const TodoPage(),
+        routes: {'/address': (context) => const AddressPage()},
       ),
     );
   }

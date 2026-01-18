@@ -22,7 +22,23 @@ class _TodoPageState extends State<TodoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Todo App (ChangeNotifier + Provider)')),
+      appBar: AppBar(
+        title: const Text('Todo App (ChangeNotifier + Provider)'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/address');
+                },
+                icon: const Icon(Icons.location_on),
+                label: const Text('Addresses'),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Consumer<TodoProvider>(
         builder: (context, provider, child) {
           final state = provider.state;

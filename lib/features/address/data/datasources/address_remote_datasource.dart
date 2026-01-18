@@ -1,5 +1,4 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:dio/dio.dart';
 
 import '../models/address_model.dart';
 
@@ -10,10 +9,13 @@ class ApiException implements Exception {
   ApiException({required this.message, this.statusCode});
 
   @override
-  String toString() => 'ApiException(statusCode: $statusCode, message: $message)';
+  String toString() =>
+      'ApiException(statusCode: $statusCode, message: $message)';
 }
 
 abstract class AddressRemoteDataSource {
+  Future<List<AddressModel>> getAddresses();
+
   Future<AddressModel> saveAddress({
     required String addressLine1,
     String? addressLine2,
@@ -32,9 +34,49 @@ abstract class AddressRemoteDataSource {
 class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   static const String baseUrl = 'https://nanaobiriyeboah.thewarriors.team/api';
 
-  final http.Client httpClient;
+  final Dio dioClient;
 
-  AddressRemoteDataSourceImpl({required this.httpClient});
+  AddressRemoteDataSourceImpl({required this.dioClient});
+
+  @override
+  Future<List<AddressModel>> getAddresses() async {
+    try {
+      final response = await dioClient.get(
+        '$baseUrl/address/list',
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+
+      if (response.statusCode == 200) {
+        final json = response.data as Map<String, dynamic>;
+        if (json['status'] == true && json['data'] != null) {
+          final list = (json['data'] as List)
+              .cast<Map<String, dynamic>>()
+              .map((data) => AddressModel.fromJson(data))
+              .toList();
+          return list;
+        } else {
+          throw ApiException(
+            message: json['message'] ?? 'Failed to fetch addresses',
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        throw ApiException(
+          message: 'Server error: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.message ?? 'Network error',
+        statusCode: e.response?.statusCode,
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(message: 'Failed to fetch addresses: $e');
+    }
+  }
 
   @override
   Future<AddressModel> saveAddress({
@@ -49,10 +91,9 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     required String label,
   }) async {
     try {
-      final response = await httpClient.post(
-        Uri.parse('$baseUrl/address/save'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await dioClient.post(
+        '$baseUrl/address/save',
+        data: {
           'address_line1': addressLine1,
           'address_line2': addressLine2,
           'city': city,
@@ -62,11 +103,12 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
           'latitude': latitude,
           'longitude': longitude,
           'label': label,
-        }),
+        },
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final json = response.data as Map<String, dynamic>;
         if (json['status'] == true && json['data'] != null) {
           return AddressModel.fromJson(json['data'] as Map<String, dynamic>);
         } else {
@@ -81,25 +123,28 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
           statusCode: response.statusCode,
         );
       }
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.message ?? 'Network error',
+        statusCode: e.response?.statusCode,
+      );
     } on ApiException {
       rethrow;
     } catch (e) {
-      throw ApiException(
-        message: 'Failed to save address: $e',
-      );
+      throw ApiException(message: 'Failed to save address: $e');
     }
   }
 
   @override
   Future<void> deleteAddress({required int id}) async {
     try {
-      final response = await httpClient.delete(
-        Uri.parse('$baseUrl/address/$id'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await dioClient.delete(
+        '$baseUrl/address/$id',
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final json = response.data as Map<String, dynamic>;
         if (json['status'] != true) {
           throw ApiException(
             message: json['message'] ?? 'Failed to delete address',
@@ -112,12 +157,15 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
           statusCode: response.statusCode,
         );
       }
+    } on DioException catch (e) {
+      throw ApiException(
+        message: e.message ?? 'Network error',
+        statusCode: e.response?.statusCode,
+      );
     } on ApiException {
       rethrow;
     } catch (e) {
-      throw ApiException(
-        message: 'Failed to delete address: $e',
-      );
+      throw ApiException(message: 'Failed to delete address: $e');
     }
   }
 }

@@ -17,6 +17,19 @@ class AddressRepositoryImpl implements AddressRepository {
   });
 
   @override
+  Future<Either<Failure, List<AddressEntity>>> getAddresses() async {
+    try {
+      final models = await remoteDataSource.getAddresses();
+      final entities = models.map((model) => model.toEntity()).toList();
+      return Right(entities);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(message: 'Failed to fetch addresses: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, AddressEntity>> saveAddress({
     required String addressLine1,
     String? addressLine2,
@@ -64,16 +77,9 @@ class AddressRepositoryImpl implements AddressRepository {
 
       return Right(model.toEntity());
     } on ApiException catch (e) {
-      return Left(
-        ServerFailure(
-          message: e.message,
-          statusCode: e.statusCode,
-        ),
-      );
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
-      return Left(
-        ServerFailure(message: 'Failed to save address: $e'),
-      );
+      return Left(ServerFailure(message: 'Failed to save address: $e'));
     }
   }
 
@@ -84,16 +90,9 @@ class AddressRepositoryImpl implements AddressRepository {
       await localDataSource.deleteAddressCache(id);
       return const Right(null);
     } on ApiException catch (e) {
-      return Left(
-        ServerFailure(
-          message: e.message,
-          statusCode: e.statusCode,
-        ),
-      );
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
     } catch (e) {
-      return Left(
-        ServerFailure(message: 'Failed to delete address: $e'),
-      );
+      return Left(ServerFailure(message: 'Failed to delete address: $e'));
     }
   }
 }
