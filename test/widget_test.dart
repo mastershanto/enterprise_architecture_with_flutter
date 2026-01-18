@@ -1,16 +1,13 @@
 import 'package:enterprise_architecture_with_flutter/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-
 
 void main() {
   testWidgets('Todo page smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
+    await tester.pumpWidget(const MyApp());
 
     // App bar title should render
-    expect(find.text('TODO (Riverpod + Bloc + Mock API)'), findsOneWidget);
+    expect(find.text('Todo App (ChangeNotifier + Provider)'), findsOneWidget);
 
     // Let the mock API load finish
     await tester.pump(const Duration(milliseconds: 20));

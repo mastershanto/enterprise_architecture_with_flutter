@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 
+import 'core/di/injection_container.dart';
+import 'features/todo/presentation/bloc/todo_state.dart';
 import 'features/todo/presentation/pages/todo_page.dart';
 
-void main() {
-  runApp(const ProviderScope(child: App()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupServiceLocator();
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
@@ -12,13 +16,16 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Clean Flutter (Enterprise Demo)',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => getIt<TodoProvider>())],
+      child: MaterialApp(
+        title: 'Clean Flutter (Enterprise Demo)',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const TodoPage(),
       ),
-      home: const TodoPage(),
     );
   }
 }

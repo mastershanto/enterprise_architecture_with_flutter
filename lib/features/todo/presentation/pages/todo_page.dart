@@ -1,161 +1,127 @@
-import 'package:enterprise_architecture_with_flutter/features/todo/presentation/notifiers/todo_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 
-import '../../providers/todo_providers.dart';
 import '../bloc/todo_state.dart';
 import '../widgets/todo_item.dart';
 
-class TodoPage extends ConsumerStatefulWidget {
+class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
 
   @override
-  ConsumerState<TodoPage> createState() => _TodoPageState();
+  State<TodoPage> createState() => _TodoPageState();
 }
 
-class _TodoPageState extends ConsumerState<TodoPage> {
+class _TodoPageState extends State<TodoPage> {
   @override
   void initState() {
     super.initState();
     // Load todos when page initializes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(todoNotifierProvider.notifier).loadTodos();
-    });
+    Future.microtask(() => context.read<TodoProvider>().getTodos());
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch the todo state from the notifier
-    final todoState = ref.watch(todoNotifierProvider);
-    final notifier = ref.read(todoNotifierProvider.notifier);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'TODO (Riverpod + StateNotifier + Clean Architecture)',
-        ),
+      appBar: AppBar(title: const Text('Todo App (ChangeNotifier + Provider)')),
+      body: Consumer<TodoProvider>(
+        builder: (context, provider, child) {
+          final state = provider.state;
+
+          // Show error snackbar
+          if (state.error != null) {
+            Future.microtask(() {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: ${state.error?.message}')),
+              );
+              provider.clearError();
+            });
+          }
+
+          // Show success snackbar
+          if (state.isSuccess) {
+            Future.microtask(() {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Success!')));
+              provider.clearSuccess();
+            });
+          }
+
+          // Loading state
+          if (state.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Empty state
+          if (state.todos.isEmpty) {
+            return const Center(child: Text('No todos yet. Add one!'));
+          }
+
+          // Todos list
+          return ListView.separated(
+            itemCount: state.todos.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final todo = state.todos[index];
+              return TodoItem(
+                todo: todo,
+                onToggle: () {
+                  final updated = todo.copyWith(isCompleted: !todo.isCompleted);
+                  context.read<TodoProvider>().updateTodo(updated);
+                },
+                onDelete: () =>
+                    context.read<TodoProvider>().deleteTodo(todo.id),
+              );
+            },
+          );
+        },
       ),
-      body: _buildBody(todoState, notifier),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTodoDialog(context, notifier),
+        onPressed: () => _showAddTodoDialog(context),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildBody(TodoState state, TodoNotifier notifier) {
-    return switch (state) {
-      TodoInitial() => const Center(child: Text('Initializing...')),
-      TodoLoading() => const Center(child: CircularProgressIndicator()),
-      TodoLoaded(todos: final todos) => _buildLoadedState(todos, notifier),
-      TodoError(failure: final failure) => _buildErrorState(failure, notifier),
-    };
-  }
+  void _showAddTodoDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
 
-  Widget _buildLoadedState(List todos, TodoNotifier notifier) {
-    if (todos.isEmpty) {
-      return const Center(child: Text('No TODOs. Add one!'));
-    }
-    return ListView.separated(
-      itemCount: todos.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (_, index) => TodoItem(
-        todo: todos[index],
-        onToggle: () => notifier.toggleTodo(id: todos[index].id),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(dynamic failure, TodoNotifier notifier) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('Error: ${failure.message}'),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => notifier.retry(),
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddTodoDialog(BuildContext context, TodoNotifier notifier) {
     showDialog(
       context: context,
-      builder: (_) => _TodoDialog(
-        onAdd: (title, description) {
-          notifier.addTodo(title: title, description: description);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-}
-
-class _TodoDialog extends StatefulWidget {
-  final Function(String title, String description) onAdd;
-
-  const _TodoDialog({required this.onAdd});
-
-  @override
-  State<_TodoDialog> createState() => _TodoDialogState();
-}
-
-class _TodoDialogState extends State<_TodoDialog> {
-  final _title = TextEditingController();
-  final _desc = TextEditingController();
-  String? _error;
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _desc.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add TODO'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            key: const Key('todo_title_field'),
-            controller: _title,
-            decoration: const InputDecoration(labelText: 'Title'),
-          ),
-          TextField(
-            key: const Key('todo_description_field'),
-            controller: _desc,
-            decoration: const InputDecoration(labelText: 'Description'),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: Colors.red)),
+      builder: (context) => AlertDialog(
+        title: const Text('Add Todo'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(hintText: 'Title'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(hintText: 'Description'),
+            ),
           ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<TodoProvider>().addTodo(
+                titleController.text,
+                descriptionController.text,
+              );
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final title = _title.text.trim();
-            if (title.isEmpty) {
-              setState(() => _error = 'Title is required');
-              return;
-            }
-            widget.onAdd(title, _desc.text.trim());
-          },
-          child: const Text('Add'),
-        ),
-      ],
     );
   }
 }
