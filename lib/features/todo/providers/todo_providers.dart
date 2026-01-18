@@ -6,7 +6,8 @@ import '../domain/repositories/todo_repository.dart';
 import '../domain/usecases/add_todo_uc.dart';
 import '../domain/usecases/get_todos_uc.dart';
 import '../domain/usecases/toggle_todo_uc.dart';
-import '../presentation/bloc/todo_bloc.dart';
+import '../presentation/bloc/todo_state.dart';
+import '../presentation/notifiers/todo_notifier.dart';
 
 final todoRepositoryProvider = Provider<TodoRepository>((ref) {
   return TodoRepositoryImpl(
@@ -27,12 +28,13 @@ final toggleTodoUseCaseProvider = Provider<ToggleTodoUseCase>((ref) {
   return ToggleTodoUseCase(repository: ref.watch(todoRepositoryProvider));
 });
 
-final todoBlocProvider = Provider.autoDispose<TodoBloc>((ref) {
-  final bloc = TodoBloc(
-    getTodos: ref.watch(getTodosUseCaseProvider),
-    addTodo: ref.watch(addTodoUseCaseProvider),
-    toggleTodo: ref.watch(toggleTodoUseCaseProvider),
-  );
-  ref.onDispose(bloc.close);
-  return bloc;
-});
+/// StateNotifierProvider for managing TODO state
+/// Returns the current TodoState (Loading, Loaded, Error, or Initial)
+final todoNotifierProvider =
+    StateNotifierProvider.autoDispose<TodoNotifier, TodoState>((ref) {
+      return TodoNotifier(
+        getTodosUseCase: ref.watch(getTodosUseCaseProvider),
+        addTodoUseCase: ref.watch(addTodoUseCaseProvider),
+        toggleTodoUseCase: ref.watch(toggleTodoUseCaseProvider),
+      );
+    });

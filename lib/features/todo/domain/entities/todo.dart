@@ -1,4 +1,6 @@
-class TodoEntity {
+import 'package:equatable/equatable.dart';
+
+class TodoEntity extends Equatable {
   final String id;
   final String title;
   final String description;
@@ -32,4 +34,14 @@ class TodoEntity {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    description,
+    isCompleted,
+    createdAt,
+    updatedAt,
+  ];
 }
