@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('Todo page smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const App());
 
     // App bar title should render
     expect(find.text('Todo App (ChangeNotifier + Provider)'), findsOneWidget);
