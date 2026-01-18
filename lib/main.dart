@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/di/injection_container.dart';
+import 'features/address/presentation/bloc/address_state.dart';
 import 'features/todo/presentation/bloc/todo_state.dart';
 import 'features/todo/presentation/pages/todo_page.dart';
 
@@ -17,7 +18,10 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => getIt<TodoProvider>())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => getIt<TodoProvider>()),
+        ChangeNotifierProvider(create: (_) => getIt<AddressProvider>()),
+      ],
       child: MaterialApp(
         title: 'Clean Flutter (Enterprise Demo)',
         theme: ThemeData(
