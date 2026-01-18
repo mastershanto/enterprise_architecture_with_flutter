@@ -35,15 +35,29 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   static const String baseUrl = 'https://nanaobiriyeboah.thewarriors.team/api';
 
   final Dio dioClient;
+  String? _authToken;
 
   AddressRemoteDataSourceImpl({required this.dioClient});
+
+  // Set authentication token
+  void setAuthToken(String? token) {
+    _authToken = token;
+  }
+
+  Map<String, dynamic> get _headers {
+    final headers = {'Content-Type': 'application/json'};
+    if (_authToken != null) {
+      headers['Authorization'] = 'Bearer $_authToken';
+    }
+    return headers;
+  }
 
   @override
   Future<List<AddressModel>> getAddresses() async {
     try {
       final response = await dioClient.get(
         '$baseUrl/address/list',
-        options: Options(headers: {'Content-Type': 'application/json'}),
+        options: Options(headers: _headers),
       );
 
       if (response.statusCode == 200) {
@@ -68,7 +82,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ApiException(
-        message: e.message ?? 'Network error',
+        message: e.response?.data['message'] ?? e.message ?? 'Network error',
         statusCode: e.response?.statusCode,
       );
     } on ApiException {
@@ -104,7 +118,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
           'longitude': longitude,
           'label': label,
         },
-        options: Options(headers: {'Content-Type': 'application/json'}),
+        options: Options(headers: _headers),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -140,7 +154,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     try {
       final response = await dioClient.delete(
         '$baseUrl/address/$id',
-        options: Options(headers: {'Content-Type': 'application/json'}),
+        options: Options(headers: _headers),
       );
 
       if (response.statusCode == 200) {

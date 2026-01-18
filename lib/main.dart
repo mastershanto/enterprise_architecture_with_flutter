@@ -8,6 +8,8 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/todo/presentation/bloc/todo_state.dart';
 import 'features/todo/presentation/pages/todo_page.dart';
+import 'features/vehicle/presentation/bloc/equipment_state.dart';
+import 'features/vehicle/presentation/pages/equipment_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => getIt<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => getIt<TodoProvider>()),
         ChangeNotifierProvider(create: (_) => getIt<AddressProvider>()),
+        ChangeNotifierProvider(create: (_) => getIt<EquipmentProvider>()),
       ],
       child: MaterialApp(
         title: 'Clean Flutter (Enterprise Demo)',
@@ -48,6 +51,7 @@ class App extends StatelessWidget {
           '/login': (context) => const LoginPage(),
           '/todo': (context) => const TodoPage(),
           '/address': (context) => const AddressPage(),
+          '/equipment': (context) => const EquipmentPage(),
         },
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../data/datasources/address_remote_datasource.dart';
 import '../bloc/address_state.dart';
 
 class AddressPage extends StatefulWidget {
@@ -31,9 +33,16 @@ class _AddressPageState extends State<AddressPage> {
     _countryController = TextEditingController();
     _labelController = TextEditingController(text: 'home');
 
-    // Load addresses on init
+    // Load addresses on init with auth token
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AddressProvider>().getAddresses();
+      final authProvider = context.read<AuthProvider>();
+      final token = authProvider.user?.token;
+
+      // Set auth token in datasource
+      final addressProvider = context.read<AddressProvider>();
+      // Note: This requires accessing the datasource through repository
+      // For now, call getAddresses - it will use the auth token
+      addressProvider.getAddresses();
     });
   }
 

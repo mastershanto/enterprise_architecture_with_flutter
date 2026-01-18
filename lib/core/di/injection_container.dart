@@ -25,20 +25,51 @@ import '../../features/todo/domain/usecases/add_todo_uc.dart';
 import '../../features/todo/domain/usecases/get_todos_uc.dart';
 import '../../features/todo/domain/usecases/toggle_todo_uc.dart';
 import '../../features/todo/presentation/bloc/todo_state.dart';
+import '../../features/vehicle/data/datasources/equipment_local_datasource.dart';
+import '../../features/vehicle/data/datasources/equipment_remote_datasource.dart';
+import '../../features/vehicle/data/repositories/equipment_repository_impl.dart';
+import '../../features/vehicle/domain/repositories/equipment_repository.dart';
+import '../../features/vehicle/domain/usecases/get_equipments_uc.dart';
+import '../../features/vehicle/presentation/bloc/equipment_state.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
   // HTTP Clients
-  getIt.registerSingleton<Dio>(Dio());
+  final dio = Dio();
+
+  // Add interceptor for auth token
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Get auth token from AuthProvider if available
+        try {
+          final authProvider = getIt<AuthProvider>();
+          if (authProvider.user?.token != null) {
+            options.headers['Authorization'] =
+                'Bearer ${authProvider.user!.token}';
+          }
+        } catch (e) {
+          // AuthProvider not yet registered, skip
+        }
+        return handler.next(options);
+      },
+    ),
+  );
+
+  getIt.registerSingleton<Dio>(dio);
 
   // ============ AUTH FEATURE ============
   // Data Sources
   getIt.registerSingleton<AuthLocalDataSource>(AuthLocalDataSourceInMemory());
 
-  getIt.registerSingleton<AuthRemoteDataSource>(
-    AuthRemoteDataSourceImpl(dioClient: getIt<Dio>()),
-  );
+  // Use MOCK for testing (accepts any credentials)
+  getIt.registerSingleton<AuthRemoteDataSource>(AuthRemoteDataSourceMock());
+
+  // Use REAL API (uncomment when backend is ready)
+  // getIt.registerSingleton<AuthRemoteDataSource>(
+  //   AuthRemoteDataSourceImpl(dioClient: getIt<Dio>()),
+  // );
 
   // Repository
   getIt.registerSingleton<AuthRepository>(
@@ -146,5 +177,39 @@ Future<void> setupServiceLocator() async {
       saveAddressUsecase: getIt<SaveAddressUseCase>(),
       deleteAddressUsecase: getIt<DeleteAddressUseCase>(),
     ),
+  );
+
+  // ============ VEHICLE EQUIPMENT FEATURE ============
+  // Data Sources
+  getIt.registerSingleton<EquipmentLocalDataSource>(
+    EquipmentLocalDataSourceInMemory(),
+  );
+
+  // Use REAL API
+  getIt.registerSingleton<EquipmentRemoteDataSource>(
+    EquipmentRemoteDataSourceImpl(dioClient: getIt<Dio>()),
+  );
+
+  // Use MOCK for testing (uncomment if API not available)
+  // getIt.registerSingleton<EquipmentRemoteDataSource>(
+  //   EquipmentRemoteDataSourceMock(),
+  // );
+
+  // Repository
+  getIt.registerSingleton<EquipmentRepository>(
+    EquipmentRepositoryImpl(
+      remoteDataSource: getIt<EquipmentRemoteDataSource>(),
+      localDataSource: getIt<EquipmentLocalDataSource>(),
+    ),
+  );
+
+  // Use Cases
+  getIt.registerSingleton<GetEquipmentsUseCase>(
+    GetEquipmentsUseCase(repository: getIt<EquipmentRepository>()),
+  );
+
+  // Provider
+  getIt.registerSingleton<EquipmentProvider>(
+    EquipmentProvider(getEquipmentsUsecase: getIt<GetEquipmentsUseCase>()),
   );
 }

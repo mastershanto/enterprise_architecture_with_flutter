@@ -35,14 +35,28 @@ class _TodoPageState extends State<TodoPage> {
         title: const Text('Todo App (ChangeNotifier + Provider)'),
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/address');
-                },
-                icon: const Icon(Icons.location_on),
-                label: const Text('Addresses'),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/address');
+              },
+              icon: const Icon(Icons.location_on, size: 18),
+              label: const Text('Address', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/equipment');
+              },
+              icon: const Icon(Icons.build_circle, size: 18),
+              label: const Text('Equipment', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               ),
             ),
           ),

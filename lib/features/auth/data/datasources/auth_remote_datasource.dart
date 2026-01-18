@@ -22,40 +22,68 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await dioClient.post(
         '$baseUrl/users/login',
         data: {'email': email, 'password': password},
-        options: Options(
-          validateStatus: (status) {
-            // Accept all status codes to handle them manually
-            return status != null && status < 500;
-          },
-        ),
       );
 
       if (response.statusCode == 200 && response.data['status'] == true) {
         final data = response.data['data'];
         return UserModel.fromJson(data);
       } else {
-        final errorMessage = response.data is Map
-            ? response.data['message'] ?? 'Login failed: Invalid credentials'
-            : 'Login failed: ${response.statusCode}';
         throw ApiException(
-          message: errorMessage,
+          message: response.data['message'] ?? 'Login failed',
           statusCode: response.statusCode ?? 400,
         );
       }
     } on DioException catch (e) {
+      // Handle 401 and other error responses
       if (e.response != null) {
-        final errorMsg = e.response?.data is Map
-            ? e.response?.data['message'] ?? 'Authentication failed'
-            : 'Login error: ${e.response?.statusCode}';
+        final errorMessage = e.response?.data is Map
+            ? e.response?.data['message'] ?? 'Invalid credentials'
+            : 'Login error: Status ${e.response?.statusCode}';
+
         throw ApiException(
-          message: errorMsg,
+          message: errorMessage,
           statusCode: e.response?.statusCode ?? 500,
         );
       }
+
+      // Network error
       throw ApiException(
-        message: 'Network error: ${e.message}',
+        message: e.message ?? 'Network error occurred',
+        statusCode: 500,
+      );
+    } catch (e) {
+      throw ApiException(
+        message: 'Unexpected error: ${e.toString()}',
         statusCode: 500,
       );
     }
+  }
+}
+
+// Mock implementation for testing (no backend required)
+class AuthRemoteDataSourceMock implements AuthRemoteDataSource {
+  @override
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Mock user data - accept any email/password for testing
+    return UserModel(
+      id: 3,
+      name: 'Md Mizanur Rahman',
+      email: email,
+      address: '1 Parliament Sq, United Kingdom',
+      latitude: '51.50092151117726',
+      longitude: '-0.12617714703083838',
+      emailVerifiedAt: '2026-01-14T12:29:25.000000Z',
+      role: 'user',
+      avatar: null,
+      provider: null,
+      providerId: null,
+      token: '16|j8voZTEEjcRVhHaIrxUa5iVQvumzWqboe4ZM5a8leafd',
+    );
   }
 }
