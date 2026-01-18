@@ -1,8 +1,9 @@
+import 'package:enterprise_architecture_with_flutter/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:clean/main.dart';
+
 
 void main() {
   testWidgets('Todo page smoke test', (WidgetTester tester) async {
